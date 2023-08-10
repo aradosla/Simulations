@@ -1,12 +1,5 @@
 # %%
 
-# import xtrack as xt
-# import numpy as np
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# import xpart as xp
-# import xobjects as xo
-
 import json
 
 import xtrack as xt
@@ -22,6 +15,7 @@ with open('../data/collider_thin.json') as f:
 
 
 line = xt.Line.from_dict(dct['lines']['lhcb1'])
+line_edited =line.copy()
 # %%
 my_particle = xp.Particles(
                     mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9)
@@ -62,3 +56,36 @@ plt.plot(monitor_ip8.x, monitor_ip8.px, '.r')
 # %%
 line.twiss()['s','mymon5']
 line.twiss()['s','mymon8']
+# %%
+aux = line.twiss()
+# %%
+for jj,ii in enumerate(aux[:, 'bpm.*']['name']):
+    print(jj)
+    exec(f'''monitor_{ii.replace('.','_')}  = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
+                                    num_particles=num_particles)''')
+    eval(f'''line_edited.insert_element(index='{ii}', 
+         element=monitor_{ii.replace('.','_')}, 
+         name='mymon_{ii.replace('.','_')}')''')
+# %%
+line_edited.particle_ref = my_particle
+
+line_edited.build_tracker()
+# %%
+
+line_edited.twiss()[:, 'mymon_bpm_.*']
+# %%
+particles = xp.Particles(
+                    mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9, x=-0.001)
+line_edited.track(particles, num_turns=num_turns)
+# %%
+s_list = []
+x_list = []
+twiss_edited = line_edited.twiss()
+for jj,ii in enumerate(aux[:, 'bpm.*']['name']):
+    myname = f'mymon_{ii.replace(".","_")}'
+    eval(f"s_list.append(twiss_edited['s','{myname}'])")
+    myx = eval(f"monitor_{ii.replace('.','_')}.x[0][0]")
+    eval(f"x_list.append({myx})")
+# %
+plt.plot(s_list, x_list, '.-b')
+# %%
