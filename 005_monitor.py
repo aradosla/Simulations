@@ -88,4 +88,15 @@ for jj,ii in enumerate(aux[:, 'bpm.*']['name']):
     eval(f"x_list.append({myx})")
 # %
 plt.plot(s_list, x_list, '.-b')
+
 # %%
+plt.plot(s_list, twiss_edited[:, 'bpm.*']['betx'], '.-b')
+# %%
+plt.plot(s_list, twiss_edited[:, 'bpm.*']['mux'], '.-b')
+
+# %%
+# You have to remember that ip3 is the startign point of the lattice
+# twiss_edited[:, 'ip3']['betx']
+beta1 = twiss_edited[:, 'ip3']['betx']
+alpha1 = twiss_edited[:, 'ip3']['alfx']
+
