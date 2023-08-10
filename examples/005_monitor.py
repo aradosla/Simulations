@@ -1,11 +1,11 @@
 # %%
 
 import json
-
+import numpy as np
 import xtrack as xt
 import xpart as xp
 import xobjects as xo
-
+# %%
 context = xo.ContextCpu()
 
 #with open('/home/sterbini/2023_08_10_for_Anna/xtrack/test_data/hllhc15_noerrors_nobb/line_and_particle.json') as f:
@@ -22,11 +22,13 @@ my_particle = xp.Particles(
 line.particle_ref = my_particle
 
 num_particles = 1
+monitor_ip3 = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
+                                    num_particles=num_particles)
 monitor_ip5 = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
                                     num_particles=num_particles)
 monitor_ip8 = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
                                     num_particles=num_particles)
-
+line.insert_element(index='ip3', element=monitor_ip3, name='mymon3')
 line.insert_element(index='ip5', element=monitor_ip5, name='mymon5')
 line.insert_element(index='ip8', element=monitor_ip8, name='mymon8')
 
@@ -97,6 +99,26 @@ plt.plot(s_list, twiss_edited[:, 'bpm.*']['mux'], '.-b')
 # %%
 # You have to remember that ip3 is the startign point of the lattice
 # twiss_edited[:, 'ip3']['betx']
-beta1 = twiss_edited[:, 'ip3']['betx']
-alpha1 = twiss_edited[:, 'ip3']['alfx']
+phase = twiss_edited[:, 'ip3']['mux']   # initial phase
+beta1 = twiss_edited[:, 'ip3']['betx']  # initial beta
+alpha1 = twiss_edited[:, 'ip3']['alfx'] # initial alpha
+alpha2 = twiss_edited[:, 'ip8']['alfx'] # final alpha
+beta2 = twiss_edited[:, 'ip8']['betx']  # final beta
 
+# %%
+m11 = np.sqrt(beta2/beta1)*(np.cos(phase)-alpha1*np.sin(phase))
+print(m11)
+
+m21 = -(1+alpha1*alpha2)/np.sqrt(beta1*beta2)*np.sin(phase) + (alpha1-alpha2)/np.sqrt(beta1*beta2)*np.cos(phase)
+print(m21)
+
+x2 = m11*monitor_ip3.x[0][0] 
+print(monitor_ip5.x[0][0]) 
+print(x2)
+print(monitor_ip8.x[0][0])
+
+
+# %%
+plt.plot(s_list, twiss_edited[:, 'bpm.*']['alfx'], '.-b')
+# %%
+plt.plot(s_list, twiss_edited[:, 'bpm.*']['alfx'], '.-b')
