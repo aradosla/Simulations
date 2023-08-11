@@ -121,8 +121,11 @@ beta1 = twiss_edited[:, 'ip3']['betx']  # initial beta
 alpha2 = twiss_edited[:, 'ip8']['alfx'] # final alpha
 beta2 = twiss_edited[:, 'ip8']['betx']  # final beta
 # %%
+
+
 m11 = np.sqrt(beta2/beta1)*(np.cos(phase)+alpha1*np.sin(phase))
-#print(m11)
+print(m11.shape)
+print(type(m11))
 
 m12 = np.sqrt(beta1*beta2)*np.sin(phase)
 
@@ -131,11 +134,22 @@ m21 = -(1+alpha1*alpha2)/np.sqrt(beta1*beta2)*np.sin(phase) + (alpha1-alpha2)/np
 
 m22 = np.sqrt(beta1/beta2)*(np.cos(phase)-alpha2*np.sin(phase))
 
-x2 = m11*monitor_ip3.x[0][0] 
+M = np.array([[m11[0],m12[0]],[m21[0],m22[0]]])
+#print(M.reshape(2,2).shape)
+print()
+input_vector = np.array([[monitor_ip3.x[0][0]],[monitor_ip3.px[0][0]]])
+
+print(ina)
+print(input_vector)
+print(input_vector.shape)
+x2 = M @ input_vector
+
+
+#x2 = m11*monitor_ip3.x[0][0] 
 
 print('IP8_matrix',x2)
-print('IP8', monitor_ip8.x[0][0])
-
+print('IP8x' , monitor_ip8.x[0][0])
+print('IP8px', monitor_ip8.px[0][0])
 #check if the phase is correct -> m12 and m11 are correct
 #math.degrees(np.arctan(m12/(beta1*m11- alpha1*m12)))
 
