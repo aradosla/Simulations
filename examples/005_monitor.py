@@ -9,24 +9,32 @@ import xobjects as xo
 context = xo.ContextCpu()
 
 #with open('/home/sterbini/2023_08_10_for_Anna/xtrack/test_data/hllhc15_noerrors_nobb/line_and_particle.json') as f:
-with open('../data/collider_thin.json') as f:
-    dct = json.load(f)
-# collider = xt.Multiline.from_json('../data/collider_thin.json')
+#with open('../data/collider_thin.json') as f:
+#    dct = json.load(f)
+collider = xt.Multiline.from_json('../data/collider_thin.json')
 
+line = collider['lhcb1']
+for ii in line.elements:
+   # if ii is a type 'multipole' 
+    if type(ii) == xt.beam_elements.elements.Multipole:
+        if len(ii.knl)>2:
+            print(ii)
+            ii.knl[2] = 0
 
-line = xt.Line.from_dict(dct['lines']['lhcb1'])
-line_edited =line.copy()
+line.vars['i_oct_b1'] = 0
+
+line_edited = line.copy()
 # %%
 my_particle = xp.Particles(
                     mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9)
 line.particle_ref = my_particle
 
 num_particles = 1
-monitor_ip3 = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
+monitor_ip3 = xt.ParticlesMonitor(start_at_turn=0, stop_at_turn=15,
                                     num_particles=num_particles)
-monitor_ip5 = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
+monitor_ip5 = xt.ParticlesMonitor(start_at_turn=0, stop_at_turn=15,
                                     num_particles=num_particles)
-monitor_ip8 = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
+monitor_ip8 = xt.ParticlesMonitor(start_at_turn=0, stop_at_turn=15,
                                     num_particles=num_particles)
 line.insert_element(index='ip3', element=monitor_ip3, name='mymon3')
 line.insert_element(index='ip5', element=monitor_ip5, name='mymon5')
@@ -39,7 +47,7 @@ particles = xp.Particles(
 
 num_turns = 30
 monitor = xt.ParticlesMonitor(_context=context,
-                              start_at_turn=5, stop_at_turn=15,
+                              start_at_turn=0, stop_at_turn=15,
                               num_particles=num_particles)
 line.track(particles, num_turns=num_turns)
 
@@ -56,6 +64,9 @@ plt.plot(monitor_ip8.x, monitor_ip8.px, '.r')
 
 
 # %%
+
+#line.vars['i_oct_b1'] = 0
+
 line.twiss()['s','mymon5']
 line.twiss()['s','mymon8']
 # %%
@@ -63,7 +74,7 @@ aux = line.twiss()
 # %%
 for jj,ii in enumerate(aux[:, 'bpm.*']['name']):
     print(jj)
-    exec(f'''monitor_{ii.replace('.','_')}  = xt.ParticlesMonitor(start_at_turn=5, stop_at_turn=15,
+    exec(f'''monitor_{ii.replace('.','_')}  = xt.ParticlesMonitor(start_at_turn=0, stop_at_turn=15,
                                     num_particles=num_particles)''')
     eval(f'''line_edited.insert_element(index='{ii}', 
          element=monitor_{ii.replace('.','_')}, 
@@ -101,16 +112,14 @@ plt.plot(s_list, twiss_edited[:, 'bpm.*']['mux'], '.-b')
 # twiss_edited[:, 'ip3']['betx']
 import math
 phase1 = twiss_edited[:, 'ip3']['mux']   # initial phase
-phase2 = twiss_edited[:, 'ip3']['mux']   # final phase
-#phase = (phase2-phase1)*np.pi/180
-# from degrees to radians
-phase = math.radians(phase2-phase1)
+phase2 = twiss_edited[:, 'ip8']['mux']   # final phase
+phase = (phase2-phase1)*2*np.pi
 
 alpha1 = twiss_edited[:, 'ip3']['alfx'] # initial alpha
 beta1 = twiss_edited[:, 'ip3']['betx']  # initial beta
 
-alpha2 = twiss_edited[:, 'ip3']['alfx'] # final alpha
-beta2 = twiss_edited[:, 'ip3']['betx']  # final beta
+alpha2 = twiss_edited[:, 'ip8']['alfx'] # final alpha
+beta2 = twiss_edited[:, 'ip8']['betx']  # final beta
 # %%
 m11 = np.sqrt(beta2/beta1)*(np.cos(phase)+alpha1*np.sin(phase))
 #print(m11)
@@ -128,8 +137,18 @@ print('IP8_matrix',x2)
 print('IP8', monitor_ip8.x[0][0])
 
 #check if the phase is correct -> m12 and m11 are correct
-math.degrees(np.arctan(m12/(beta1*m11- alpha1*m12)))
+#math.degrees(np.arctan(m12/(beta1*m11- alpha1*m12)))
 
 # %%
 plt.plot(s_list, twiss_edited[:, 'bpm.*']['alfx'], '.-b')
 
+
+# %%
+# IP8_matrix [7.0380056e-05]
+# IP8 6.667365146559886e-05
+# %%
+twiss_edited.dqx
+
+        
+
+# %%
