@@ -97,28 +97,39 @@ plt.plot(s_list, twiss_edited[:, 'bpm.*']['betx'], '.-b')
 plt.plot(s_list, twiss_edited[:, 'bpm.*']['mux'], '.-b')
 
 # %%
-# You have to remember that ip3 is the startign point of the lattice
+# You have to remember that ip3 is the starting point of the lattice
 # twiss_edited[:, 'ip3']['betx']
-phase = twiss_edited[:, 'ip3']['mux']   # initial phase
-beta1 = twiss_edited[:, 'ip3']['betx']  # initial beta
-alpha1 = twiss_edited[:, 'ip3']['alfx'] # initial alpha
-alpha2 = twiss_edited[:, 'ip8']['alfx'] # final alpha
-beta2 = twiss_edited[:, 'ip8']['betx']  # final beta
+import math
+phase1 = twiss_edited[:, 'ip3']['mux']   # initial phase
+phase2 = twiss_edited[:, 'ip3']['mux']   # final phase
+#phase = (phase2-phase1)*np.pi/180
+# from degrees to radians
+phase = math.radians(phase2-phase1)
 
+alpha1 = twiss_edited[:, 'ip3']['alfx'] # initial alpha
+beta1 = twiss_edited[:, 'ip3']['betx']  # initial beta
+
+alpha2 = twiss_edited[:, 'ip3']['alfx'] # final alpha
+beta2 = twiss_edited[:, 'ip3']['betx']  # final beta
 # %%
-m11 = np.sqrt(beta2/beta1)*(np.cos(phase)-alpha1*np.sin(phase))
-print(m11)
+m11 = np.sqrt(beta2/beta1)*(np.cos(phase)+alpha1*np.sin(phase))
+#print(m11)
+
+m12 = np.sqrt(beta1*beta2)*np.sin(phase)
 
 m21 = -(1+alpha1*alpha2)/np.sqrt(beta1*beta2)*np.sin(phase) + (alpha1-alpha2)/np.sqrt(beta1*beta2)*np.cos(phase)
-print(m21)
+#print(m21)
+
+m22 = np.sqrt(beta1/beta2)*(np.cos(phase)-alpha2*np.sin(phase))
 
 x2 = m11*monitor_ip3.x[0][0] 
-print(monitor_ip5.x[0][0]) 
-print(x2)
-print(monitor_ip8.x[0][0])
 
+print('IP8_matrix',x2)
+print('IP8', monitor_ip8.x[0][0])
+
+#check if the phase is correct -> m12 and m11 are correct
+math.degrees(np.arctan(m12/(beta1*m11- alpha1*m12)))
 
 # %%
 plt.plot(s_list, twiss_edited[:, 'bpm.*']['alfx'], '.-b')
-# %%
-plt.plot(s_list, twiss_edited[:, 'bpm.*']['alfx'], '.-b')
+
