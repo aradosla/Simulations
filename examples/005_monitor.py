@@ -43,9 +43,9 @@ line.insert_element(index='ip8', element=monitor_ip8, name='mymon8')
 line.build_tracker()
 
 particles = xp.Particles(
-                    mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9, x=0.001)
+                    mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9, x=0.003)
 
-num_turns = 30
+num_turns = 10000
 monitor = xt.ParticlesMonitor(_context=context,
                               start_at_turn=0, stop_at_turn=15,
                               num_particles=num_particles)
@@ -59,10 +59,20 @@ line.track(particles, num_turns=num_turns)
 from matplotlib import pyplot as plt
 plt.close('all')
 plt.figure(1)
-plt.plot(monitor_ip5.x, monitor_ip5.px, '.b')
-plt.plot(monitor_ip8.x, monitor_ip8.px, '.r')
-
-
+#plt.plot(monitor_ip3.x, monitor_ip3.px, '.g')
+plt.plot(monitor_ip5.x, monitor_ip5.px, '.b', label='ip5')
+plt.plot(monitor_ip8.x, monitor_ip8.px, '.r', label='ip8')
+plt.xlabel('x [m]')
+plt.ylabel('px [rad]')
+#plt.legend()
+plt.show()
+plt.figure(2)
+#plt.plot(monitor_ip3.y, monitor_ip3.py, '.g')
+plt.plot(monitor_ip5.y, monitor_ip5.py, '.b', label='ip5')
+plt.plot(monitor_ip8.y, monitor_ip8.py, '.r', label='ip8')
+plt.xlabel('y [m]')
+plt.ylabel('py [rad]')
+#plt.legend()
 # %%
 
 #line.vars['i_oct_b1'] = 0
@@ -80,30 +90,66 @@ for jj,ii in enumerate(aux[:, 'bpm.*']['name']):
          element=monitor_{ii.replace('.','_')}, 
          name='mymon_{ii.replace('.','_')}')''')
 # %%
-line_edited.particle_ref = my_particle
+line_edited.discard_tracker()
+line_edited.particle_ref = particles
 
 line_edited.build_tracker()
+
+
+# %%
+#line.discard_tracker()
 # %%
 
 line_edited.twiss()[:, 'mymon_bpm_.*']
 # %%
+# Here you can add the initial conditions, e.g. x, px, y, py, etc.
+# When changing the initial conditions, the amplitude of the oscillations is changing
+# Px and Py are the momenta in the horizontal and vertical plane, respectively and their
+# change is affecting the amplitude of the oscillations
 particles = xp.Particles(
-                    mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9, x=-0.001)
+                    mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9, x =3e-3,  y = 0.00, px = 0.000, py = 0.0000)
 line_edited.track(particles, num_turns=num_turns)
+
 # %%
 s_list = []
+mux_list = []
 x_list = []
+y_list = []
+px_list = []
 twiss_edited = line_edited.twiss()
 for jj,ii in enumerate(aux[:, 'bpm.*']['name']):
     myname = f'mymon_{ii.replace(".","_")}'
     eval(f"s_list.append(twiss_edited['s','{myname}'])")
     myx = eval(f"monitor_{ii.replace('.','_')}.x[0][0]")
+    myy = eval(f"monitor_{ii.replace('.','_')}.y[0][0]")
+    mypx = eval(f"monitor_{ii.replace('.','_')}.px[0][0]")
+    mypy = eval(f"monitor_{ii.replace('.','_')}.py[0][0]")
+    eval(f"px_list.append({mypx})")
+    eval(f"y_list.append({myy})")
+    #mux = myx/twiss_edited['mux', f'{myname}']
+    #print(mux)
+    #eval(f"mux_list.append(mux)")
     eval(f"x_list.append({myx})")
-# %
-plt.plot(s_list, x_list, '.-b')
-
 # %%
-plt.plot(s_list, twiss_edited[:, 'bpm.*']['betx'], '.-b')
+
+plt.plot(s_list, y_list, '.-r') 
+plt.show()
+fig, ax = plt.subplots()
+ax.plot(s_list, x_list, '.-b')
+ax.set_xlabel('s [m]')
+ax.set_ylabel('x [m]', color='b')
+ax1 = ax.twinx()
+#plt.plot(s_list, x_list, '.-b')
+ax1.plot(s_list, twiss_edited[:, 'bpm.*']['betx'], '.-r')
+ax1.set_ylabel('betx [m]', color='r')
+plt.title('x [m] and betx [m] vs s [m]')
+plt.show()
+#plt.plot(s_list, px_list, '.-g', label='px')
+#plt.plot(s_list[50:], mux_list[50:], '.-r')
+
+#plt.show()
+# %%
+
 # %%
 plt.plot(s_list, twiss_edited[:, 'bpm.*']['mux'], '.-b')
 
@@ -136,10 +182,10 @@ m22 = np.sqrt(beta1/beta2)*(np.cos(phase)-alpha2*np.sin(phase))
 
 M = np.array([[m11[0],m12[0]],[m21[0],m22[0]]])
 #print(M.reshape(2,2).shape)
-print()
+
 input_vector = np.array([[monitor_ip3.x[0][0]],[monitor_ip3.px[0][0]]])
 
-print(ina)
+
 print(input_vector)
 print(input_vector.shape)
 x2 = M @ input_vector
