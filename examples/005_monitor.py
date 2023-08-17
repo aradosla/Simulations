@@ -207,8 +207,11 @@ plt.plot(s_list, twiss_edited[:, 'bpm.*']['alfx'], '.-b')
 # IP8_matrix [7.0380056e-05]
 # IP8 6.667365146559886e-05
 # %%
-twiss_edited.dqx
+twiss_edited.cols
+dir(twiss_edited)
 
         
 
+# %%
+plt.plot(s_list, twiss_edited[:, 'bpm.*']['energy'], '.-b')
 # %%
